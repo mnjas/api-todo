@@ -1,6 +1,5 @@
 import request from "supertest";
-import 'mocha';
-import { describe, expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import index from "./index";
 
 describe("/todos", () => {
