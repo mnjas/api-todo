@@ -1,58 +1,63 @@
 import request from "supertest";
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from "@jest/globals";
 import index from "./index";
 
-describe("/todos", () => {
-  it("créer une nouvelle tache", async () => {
+describe("/donuts", () => {
+  it("créer un nouveau donut", async () => {
     const response = await request(index)
-      .post("/todos")
-      .send({ title: "Utiliser Supertest" });
+      .post("/donuts")
+      .send({ name: "Donut fourré", flavor: "vanille", price: 2 });
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
       id: expect.any(Number),
-      title: "Utiliser Supertest",
-      completed: false,
+      name: "Donut fourré",
+      flavor: "vanille",
+      price: 2,
+      available: true,
     });
   });
 
-  it("return 400 si title est introuvable", async () => {
+  it("return 400 si des champs requis sont introuvables", async () => {
     const response = await request(index)
-      .post("/todos")
-      .send({ completed: true });
+      .post("/donuts")
+      .send({ flavor: "pistache" });
 
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject({
-      error: "titre requis",
+      error: "Nom, saveur, et prix requis",
     });
   });
 
-  it("mise à jour d'une tâche", async () => {
-    const newTodo = await request(index)
-      .post("/todos")
-      .send({ title: "Souhaiter un joyeux anniversaire", completed: false });
+  it("mise à jour d'un donut", async () => {
+    const newDonut = await request(index)
+      .post("/donuts")
+      .send({ name: "Donut au chocolat", flavor: "Chocolat", price: 2.5 });
 
-    const updatedTodo = await request(index)
-      .put(`/todos/${newTodo.body.id}`)
-      .send({ title: "Souhaiter un joyeux anniversaire à John Doe", completed: true });
+    const updatedDonut = await request(index)
+      .put(`/donuts/${newDonut.body.id}`)
+      .send({ name: "Triple chocolat donut", price: 2.99, available: false });
 
-    expect(updatedTodo.status).toBe(200);
-    expect(updatedTodo.body.title).toBe("Souhaiter un joyeux anniversaire à John Doe");
-    expect(updatedTodo.body.completed).toBe(true);
+    expect(updatedDonut.status).toBe(200);
+    expect(updatedDonut.body.name).toBe("Triple chocolat donut");
+    expect(updatedDonut.body.price).toBe(2.99);
+    expect(updatedDonut.body.available).toBe(false);
   });
 
-  it("supprimer une tâche", async () => {
-    const newTodo = await request(index)
-      .post("/todos")
-      .send({ title: "Ne rien faire", completed: false });
-  
-    expect(newTodo.status).toBe(201);
-    expect(newTodo.body).toHaveProperty("id");
-  
-    const deleteResponse = await request(index).delete(`/todos/${newTodo.body.id}`);
+  it("supprimer un donut", async () => {
+    const newDonut = await request(index)
+      .post("/donuts")
+      .send({ name: "donut nature", flavor: "nature", price: 1.5 });
+
+    expect(newDonut.status).toBe(201);
+    expect(newDonut.body).toHaveProperty("id");
+
+    const deleteResponse = await request(index).delete(`/donuts/${newDonut.body.id}`);
     expect(deleteResponse.status).toBe(204);
 
-    const responseAfterDelete = await request(index).get("/todos");
-      console.log("TODOS AFTER DELETE:", responseAfterDelete.body);
+    const responseAfterDelete = await request(index).get("/donuts");
+    expect(responseAfterDelete.body).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: newDonut.body.id })])
+    );
   });
 });
